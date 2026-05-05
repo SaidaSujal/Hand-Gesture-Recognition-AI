@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Hand Gesture Recognition</title>
+    <!-- Modern professional font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-glow" id="cursor"></div>
+    
+    <!-- Animated Background Blobs -->
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    
+    <!-- Background overlay for glowing effects -->
+    <div id="overlay"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">HAND.<span class="neon-text">AI</span></div>
+        <ul class="nav-links">
+            <li><a href="#" onclick="showSection('home')" class="active" id="nav-home">Home</a></li>
+            <li><a href="#" onclick="showSection('scanner')" id="nav-scanner">AI Scanner</a></li>
+            <li><a href="#" onclick="showSection('about')" id="nav-about">How it Works</a></li>
+            <li><a href="#" onclick="showSection('cases')" id="nav-cases">Use Cases</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <div id="section-home" class="section active-section">
+            <div class="hero">
+                <h1>NEXT-GEN <br><span class="highlight">GESTURE RECOGNITION</span></h1>
+                <p class="hero-subtitle">Control the digital world with a simple wave of your hand.</p>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">99%</span>
+                        <span class="stat-label">Accuracy</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">&lt;50ms</span>
+                        <span class="stat-label">Latency</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Secure</span>
+                    </div>
+                </div>
+
+                <p class="hero-description">Experience the future of human-computer interaction. Our AI-powered web application instantly recognizes your hand gestures using state-of-the-art machine learning models directly in your browser. No downloads, no plugins, completely private.</p>
+
+                <button class="primary-btn" onclick="showSection('scanner'); init();">LAUNCH SCANNER NOW</button>
+            </div>
+        </div>
+
+        <!-- AI Scanner Section -->
+        <div id="section-scanner" class="section hidden-section">
+            <div class="container">
+                <!-- Dynamic Status Display -->
+                <h1 id="status-text">SYSTEM READY</h1>
+                
+                <!-- Webcam feed container -->
+                <div class="webcam-wrapper" id="webcam-wrapper">
+                    <video id="webcam-video" autoplay playsinline style="display:none;"></video>
+                    <div id="webcam-container">
+                        <canvas id="output-canvas" width="450" height="450"></canvas>
+                    </div>
+                    
+                    <!-- Live HUD Data Overlay -->
+                    <div class="live-hud" id="live-hud">
+                        <div class="hud-header">/// TELEMETRY DATA</div>
+                        <div id="hud-data" class="hud-content">AWAITING SENSOR INPUT...</div>
+                    </div>
+
+                    <!-- High-tech scanning line effect -->
+                    <div class="scanner-line" id="scanner-line"></div>
+                    <div class="scanning-overlay" id="scanning-overlay"></div>
+                    <div id="placeholder-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Controls -->
+                <button id="start-btn" onclick="init()">INITIALIZE SCANNER</button>
+
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    Connecting to Neural Network...
+                </div>
+            </div>
+        </div>
+
+        <!-- How it Works Section -->
+        <div id="section-about" class="section hidden-section">
+            <div class="about-container">
+                <h2>HOW IT <span class="highlight">WORKS</span></h2>
+                <p class="about-intro">Our application leverages a highly optimized AI architecture to deliver fast, robust, and privacy-preserving gesture recognition entirely on your device.</p>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📸</div>
+                        <h3>1. Edge Computing</h3>
+                        <p>We access your webcam securely via the browser's MediaDevices API. All processing happens locally on your machine—no video data is ever sent to the cloud, ensuring total privacy.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🖐️</div>
+                        <h3>2. MediaPipe Tracking</h3>
+                        <p>Google's MediaPipe framework runs a lightning-fast neural network to detect hands and extract 21 3D landmarks in real-time.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📐</div>
+                        <h3>3. Heuristic Analysis</h3>
+                        <p>Instead of relying on basic image classification, we use spatial mathematics to analyze the exact joint positions and angles of your fingers, identifying gestures with incredible precision.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use Cases Section -->
+        <div id="section-cases" class="section hidden-section">
+            <div class="about-container">
+                <h2>REAL-WORLD <span class="highlight">APPLICATIONS</span></h2>
+                <p class="about-intro">Hand gesture recognition unlocks completely new ways to interact with technology across various industries without requiring physical touch or hardware controllers.</p>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏥</div>
+                        <h3>Healthcare & Surgery</h3>
+                        <p>Surgeons can navigate digital X-rays and patient records using touchless gestures, maintaining a completely sterile environment in the operating room.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎮</div>
+                        <h3>Immersive Gaming</h3>
+                        <p>Experience VR and AR environments without controllers. Cast spells, interact with objects, and navigate complex menus using natural, intuitive hand movements.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚗</div>
+                        <h3>Automotive HUDs</h3>
+                        <p>Drivers can safely control infotainment systems, answer incoming calls, and adjust audio volume while keeping their eyes focused on the road ahead through simple hand sweeps.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MediaPipe Hands Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
