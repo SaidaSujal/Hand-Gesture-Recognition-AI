@@ -50,25 +50,25 @@
                     </div>
                     <!-- Stats Grid -->
                     <div class="stats-grid">
-                        <div class="stats-card tilt-card">
+                        <div class="stats-card tilt-card accent-cyan">
                             <div class="sc-number-row">
                                 <span class="ss-val" data-target="99">0</span><span class="ss-unit">%</span>
                             </div>
                             <span class="stats-label">ACCURACY</span>
                         </div>
-                        <div class="stats-card tilt-card">
+                        <div class="stats-card tilt-card accent-purple">
                             <div class="sc-number-row">
                                 <span class="ss-val-prefix">&lt;&nbsp;</span><span class="ss-val" data-target="35">0</span><span class="ss-unit">ms</span>
                             </div>
                             <span class="stats-label">LATENCY</span>
                         </div>
-                        <div class="stats-card tilt-card">
+                        <div class="stats-card tilt-card accent-green">
                             <div class="sc-number-row">
                                 <span class="ss-val" data-target="6">0</span>
                             </div>
                             <span class="stats-label">GESTURES</span>
                         </div>
-                        <div class="stats-card tilt-card">
+                        <div class="stats-card tilt-card accent-yellow">
                             <div class="sc-number-row">
                                 <span class="ss-val" data-target="100">0</span><span class="ss-unit">%</span>
                             </div>
@@ -77,15 +77,13 @@
                     </div>
                 </div>
                 <div class="hero-right">
-                    <!-- Professional AI Orb Visualization (replaces hand skeleton) -->
-                    <div class="ai-orb">
-                        <div class="orb-glow"></div>
-                        <div class="orb-core">
-                            <canvas id="heroCanvas" width="260" height="260"></canvas>
-                        </div>
+                    <!-- Glowing Floating Hand Diagram -->
+                    <div class="hero-hand-container" data-delay="300">
+                        <div class="hero-hand-glow"></div>
                         <div class="orb-ring r1"></div>
                         <div class="orb-ring r2"></div>
                         <div class="orb-ring r3"></div>
+                        <img src="hero-hand.png" alt="Hand Gesture AI" class="hero-hand-img">
                         <!-- Floating data badges -->
                         <div class="orb-badge b1"><span class="ob-icon">🎯</span> 21 Landmarks</div>
                         <div class="orb-badge b2"><span class="ob-icon">⚡</span> 30+ FPS</div>
@@ -97,14 +95,14 @@
 
         <!-- ===== 2. HOW IT WORKS ===== -->
         <section id="section-how" class="section">
-            <div class="sec-header">
+            <div class="sec-header reveal-on-scroll">
                 <span class="tag">ARCHITECTURE</span>
                 <h2>How It <span class="grad-text">Works</span></h2>
                 <p class="sec-desc">A 4-stage AI pipeline running entirely on your device</p>
             </div>
 
-            <div class="how-pipeline-new">
-                <div class="how-step tilt-card">
+            <div class="how-pipeline-new reveal-on-scroll">
+                <div class="how-step tilt-card accent-blue">
                     <div class="how-step-header">
                         <div class="how-step-num">01</div>
                         <div class="pipe-icon">📷</div>
@@ -113,7 +111,7 @@
                     <p>WebRTC streams your webcam at 30 fps via the secure MediaDevices API</p>
                 </div>
                 <div class="how-connector"></div>
-                <div class="how-step tilt-card">
+                <div class="how-step tilt-card accent-purple">
                     <div class="how-step-header">
                         <div class="how-step-num">02</div>
                         <div class="pipe-icon">🧠</div>
@@ -122,7 +120,7 @@
                     <p>MediaPipe neural network locates your hand and extracts 21 3D landmarks</p>
                 </div>
                 <div class="how-connector"></div>
-                <div class="how-step tilt-card">
+                <div class="how-step tilt-card accent-red">
                     <div class="how-step-header">
                         <div class="how-step-num">03</div>
                         <div class="pipe-icon">📐</div>
@@ -131,7 +129,7 @@
                     <p>Heuristic math computes finger angles, distances and joint ratios</p>
                 </div>
                 <div class="how-connector"></div>
-                <div class="how-step tilt-card">
+                <div class="how-step tilt-card accent-green">
                     <div class="how-step-header">
                         <div class="how-step-num">04</div>
                         <div class="pipe-icon">⚡</div>
@@ -142,20 +140,20 @@
             </div>
 
             <div class="how-cards">
-                <div class="how-card tilt-card">
+                <div class="how-card tilt-card accent-cyan reveal-on-scroll" data-delay="100">
                     <div class="how-card-icon">🖥️</div>
                     <h3>Edge Computing</h3>
-                    <p>All AI inference runs locally in your browser using WebAssembly and WebGL GPU acceleration. Zero data ever leaves your device.</p>
+                    <p>AI inference runs locally inside the browser via WebAssembly. Zero server latency.</p>
                 </div>
-                <div class="how-card tilt-card">
+                <div class="how-card tilt-card accent-purple reveal-on-scroll" data-delay="200">
                     <div class="how-card-icon">🔬</div>
                     <h3>MediaPipe Tracking</h3>
-                    <p>Google's MediaPipe Hands model detects 21 unique 3D landmarks across your hand in real-time, frame by frame.</p>
+                    <p>Tracks 21 hand joints in real-time using lightweight, edge-optimized neural networks.</p>
                 </div>
-                <div class="how-card tilt-card">
+                <div class="how-card tilt-card accent-yellow reveal-on-scroll" data-delay="300">
                     <div class="how-card-icon">📊</div>
                     <h3>Spatial Math</h3>
-                    <p>We compute spatial mathematics — joint distances and angles — making recognition rotation and scale invariant.</p>
+                    <p>Runs geometric equations on-device to compute joint angles and distance vectors instantly.</p>
                 </div>
             </div>
         </section>
@@ -222,41 +220,13 @@
                                 <table class="history-table">
                                     <thead>
                                         <tr>
-                                            <th>Gesture</th>
-                                            <th>Last Detected</th>
-                                            <th>Total Count</th>
+                                            <th>Time</th>
+                                            <th>Gesture Detected</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr data-gesture="palm">
-                                            <td>🖐️ Palm</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
-                                        </tr>
-                                        <tr data-gesture="victory">
-                                            <td>✌️ Victory</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
-                                        </tr>
-                                        <tr data-gesture="thumbs-up">
-                                            <td>👍 Thumbs Up</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
-                                        </tr>
-                                        <tr data-gesture="fist">
-                                            <td>✊ Fist</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
-                                        </tr>
-                                        <tr data-gesture="pointing">
-                                            <td>☝️ Pointing</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
-                                        </tr>
-                                        <tr data-gesture="rock">
-                                            <td>🤘 Rock On</td>
-                                            <td class="last-time">—</td>
-                                            <td class="total-count">0</td>
+                                    <tbody id="historyTableBody">
+                                        <tr class="empty-history-row">
+                                            <td colspan="2" style="text-align: center; color: var(--text-dim); padding: 1.5rem 0;">No gestures scanned yet</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -314,92 +284,103 @@
             </div>
         </section>
 
-        <!-- ===== 5. USE CASES — Horizontal Timeline ===== -->
+        <!-- ===== 5. USE CASES ===== -->
         <section id="section-usecases" class="section">
-            <div class="sec-header">
+            <div class="sec-header reveal-on-scroll">
                 <span class="tag">APPLICATIONS</span>
                 <h2>Real-World <span class="grad-text">Use Cases</span></h2>
                 <p class="sec-desc">Transforming how humans interact with technology</p>
             </div>
-            <div class="usecases-grid">
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🏥</div>
-                    <h3>Healthcare</h3>
-                    <p>Surgeons navigate X-rays and patient records using touchless gestures, maintaining a sterile operating environment.</p>
+            <div class="usecases-horizontal">
+                <div class="usecase-card tilt-card accent-red reveal-on-scroll" data-delay="100">
+                    <div class="usecase-side-num">01</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">🏥</div>
+                        <h3>Healthcare</h3>
+                        <p>Surgeons navigate patient records touchlessly during operations, maintaining a sterile environment.</p>
+                    </div>
                 </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🎮</div>
-                    <h3>Gaming &amp; VR</h3>
-                    <p>Cast spells, interact with 3D objects, and navigate menus using natural hand movements in immersive environments.</p>
+                <div class="usecase-card tilt-card accent-blue reveal-on-scroll" data-delay="200">
+                    <div class="usecase-side-num">02</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">🎮</div>
+                        <h3>Gaming &amp; VR</h3>
+                        <p>Cast spells, interact with objects, and navigate menus using natural hand movements in VR.</p>
+                    </div>
                 </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🚗</div>
-                    <h3>Automotive</h3>
-                    <p>Drivers control infotainment and navigation with gestures, keeping eyes on the road and hands near the wheel.</p>
+                <div class="usecase-card tilt-card accent-yellow reveal-on-scroll" data-delay="300">
+                    <div class="usecase-side-num">03</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">🚗</div>
+                        <h3>Automotive</h3>
+                        <p>Drivers control infotainment and navigation with gestures, keeping eyes focused on the road.</p>
+                    </div>
                 </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🏠</div>
-                    <h3>Smart Home</h3>
-                    <p>Control lights, thermostats, and appliances with wave gestures from across the room — no remote needed.</p>
+                <div class="usecase-card tilt-card accent-green reveal-on-scroll" data-delay="400">
+                    <div class="usecase-side-num">04</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">🏠</div>
+                        <h3>Smart Home</h3>
+                        <p>Control lights, thermostats, and media players with simple hand waves from across the room.</p>
+                    </div>
                 </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🤟</div>
-                    <h3>Sign Language</h3>
-                    <p>Recognize sign language gestures and translate them into text or speech in real-time, bridging communication gaps.</p>
+                <div class="usecase-card tilt-card accent-purple reveal-on-scroll" data-delay="500">
+                    <div class="usecase-side-num">05</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">🤟</div>
+                        <h3>Sign Language</h3>
+                        <p>Translate sign language gestures into text or synthetic speech in real-time, bridging gaps.</p>
+                    </div>
                 </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">♿</div>
-                    <h3>Accessibility</h3>
-                    <p>Enables people with motor impairments to control computers and smart devices through minimal hand movements.</p>
-                </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🛒</div>
-                    <h3>Retail &amp; Kiosks</h3>
-                    <p>Interactive touchless displays and self-checkout systems to improve hygiene and customer engagement.</p>
-                </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">🤖</div>
-                    <h3>Robotics Control</h3>
-                    <p>Natural gesture interface to command robotic arms, drones, and industrial machinery in real-time.</p>
-                </div>
-                <div class="usecase-card tilt-card">
-                    <div class="usecase-icon">📊</div>
-                    <h3>Office Presentations</h3>
-                    <p>Swipe through slides and control media player playback seamlessly during live pitches and corporate meetings.</p>
+                <div class="usecase-card tilt-card accent-cyan reveal-on-scroll" data-delay="600">
+                    <div class="usecase-side-num">06</div>
+                    <div class="usecase-content">
+                        <div class="usecase-icon">♿</div>
+                        <h3>Accessibility</h3>
+                        <p>Enables individuals with motor impairments to control desktop systems via small hand gestures.</p>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ===== 6. METRICS ===== -->
         <section id="section-metrics" class="section">
-            <div class="sec-header">
+            <div class="sec-header reveal-on-scroll">
                 <span class="tag">PERFORMANCE</span>
                 <h2>Live <span class="grad-text">Metrics</span> &amp; Analytics</h2>
                 <p class="sec-desc">Real benchmark data from our gesture recognition engine</p>
             </div>
-            <div class="ring-row">
-                <div class="ring-card tilt-card" data-pct="99">
-                    <canvas class="ring-cvs" width="120" height="120"></canvas>
-                    <div class="ring-val">99%</div>
+            <div class="ring-row reveal-on-scroll">
+                <div class="ring-card tilt-card accent-cyan" data-pct="99">
+                    <div class="ring-wrapper">
+                        <canvas class="ring-cvs" width="90" height="90"></canvas>
+                        <div class="ring-val">99%</div>
+                    </div>
                     <h4>Accuracy</h4><p>Controlled conditions</p>
                 </div>
-                <div class="ring-card tilt-card" data-pct="85">
-                    <canvas class="ring-cvs" width="120" height="120"></canvas>
-                    <div class="ring-val">85%</div>
+                <div class="ring-card tilt-card accent-purple" data-pct="85">
+                    <div class="ring-wrapper">
+                        <canvas class="ring-cvs" width="90" height="90"></canvas>
+                        <div class="ring-val">85%</div>
+                    </div>
                     <h4>Real-World</h4><p>Variable lighting</p>
                 </div>
-                <div class="ring-card tilt-card" data-pct="97">
-                    <canvas class="ring-cvs" width="120" height="120"></canvas>
-                    <div class="ring-val">97%</div>
+                <div class="ring-card tilt-card accent-green" data-pct="97">
+                    <div class="ring-wrapper">
+                        <canvas class="ring-cvs" width="90" height="90"></canvas>
+                        <div class="ring-val">97%</div>
+                    </div>
                     <h4>Consistency</h4><p>Repeated gestures</p>
                 </div>
-                <div class="ring-card tilt-card" data-pct="92">
-                    <canvas class="ring-cvs" width="120" height="120"></canvas>
-                    <div class="ring-val">92%</div>
+                <div class="ring-card tilt-card accent-yellow" data-pct="92">
+                    <div class="ring-wrapper">
+                        <canvas class="ring-cvs" width="90" height="90"></canvas>
+                        <div class="ring-val">92%</div>
+                    </div>
                     <h4>Robustness</h4><p>Skin tones &amp; sizes</p>
                 </div>
             </div>
-            <div class="charts-row">
+            <div class="charts-row reveal-on-scroll">
                 <div class="chart-box">
                     <h3>Gesture Accuracy by Type</h3>
                     <canvas id="accuracyChart" width="500" height="280"></canvas>
@@ -410,28 +391,28 @@
                 </div>
             </div>
             <div class="performance-grid">
-                <div class="perf-card tilt-card">
+                <div class="perf-card tilt-card accent-blue reveal-on-scroll" data-delay="100">
                     <div class="perf-icon">🔌</div>
                     <div class="perf-content">
                         <h3>Zero Setup Footprint</h3>
                         <p>No downloads, SDKs, or hardware required. Runs natively in standard HTML5.</p>
                     </div>
                 </div>
-                <div class="perf-card tilt-card">
+                <div class="perf-card tilt-card accent-purple reveal-on-scroll" data-delay="200">
                     <div class="perf-icon">⚡</div>
                     <div class="perf-content">
                         <h3>Sub-35ms Latency</h3>
                         <p>GPU-accelerated tensor math runs locally on-device at 30+ FPS.</p>
                     </div>
                 </div>
-                <div class="perf-card tilt-card">
+                <div class="perf-card tilt-card accent-green reveal-on-scroll" data-delay="300">
                     <div class="perf-icon">🔒</div>
                     <div class="perf-content">
                         <h3>100% Privacy-First</h3>
                         <p>Frames processed in-memory and discarded. GDPR and HIPAA compliant.</p>
                     </div>
                 </div>
-                <div class="perf-card tilt-card">
+                <div class="perf-card tilt-card accent-cyan reveal-on-scroll" data-delay="400">
                     <div class="perf-icon">📱</div>
                     <div class="perf-content">
                         <h3>Universal Support</h3>
@@ -443,69 +424,69 @@
 
         <!-- ===== 7. UNDER THE HOOD (replaces FAQ) ===== -->
         <section id="section-hood" class="section">
-            <div class="sec-header">
+            <div class="sec-header reveal-on-scroll">
                 <span class="tag">DEEP DIVE</span>
                 <h2>Under the <span class="grad-text">Hood</span></h2>
                 <p class="sec-desc">Explore the internal architecture powering HAND.AI</p>
             </div>
-            <div class="hood-pipeline">
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">01</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">🌐</span></div>
+            <div class="hood-horizontal-timeline">
+                <div class="hood-card tilt-card c-blue reveal-on-scroll" data-delay="100">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">01</div>
+                        <div class="hood-card-emoji">🌐</div>
                     </div>
-                    <h3>Browser Runtime</h3>
-                    <p>Runs entirely inside standard browser tabs using WebAssembly, WebGL, and Web Workers.</p>
+                    <h3>Client-Side Runtime</h3>
+                    <p>Runs 100% in-browser via WebAssembly and WebWorkers. Zero installs.</p>
                     <span class="hood-tag">Client-Side</span>
                 </div>
-                <div class="hood-connector"></div>
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">02</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">🧬</span></div>
+                
+                <div class="hood-card tilt-card c-purple reveal-on-scroll" data-delay="200">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">02</div>
+                        <div class="hood-card-emoji">🧬</div>
                     </div>
-                    <h3>Neural Pipeline</h3>
-                    <p>Palm detector triggers keypoint regressions to locate and track 21 coordinates in real-time.</p>
+                    <h3>Neural Detection</h3>
+                    <p>MediaPipe tracks 21 coordinates of your hand in real-time.</p>
                     <span class="hood-tag">ML Engine</span>
                 </div>
-                <div class="hood-connector"></div>
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">03</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">📐</span></div>
+                
+                <div class="hood-card tilt-card c-red reveal-on-scroll" data-delay="300">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">03</div>
+                        <div class="hood-card-emoji">📐</div>
                     </div>
-                    <h3>Heuristic Classifier</h3>
-                    <p>Computes geometric joint angles and Euclidean finger distances dynamically without cloud lag.</p>
+                    <h3>Geometric Analysis</h3>
+                    <p>Mathematical algorithms compute finger angles and joint ratios instantly.</p>
                     <span class="hood-tag">Math Core</span>
                 </div>
-                <div class="hood-connector"></div>
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">04</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">🔊</span></div>
+                
+                <div class="hood-card tilt-card c-green reveal-on-scroll" data-delay="400">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">04</div>
+                        <div class="hood-card-emoji">🔊</div>
                     </div>
-                    <h3>Audio Synthesis</h3>
-                    <p>Generates real-time synthetic feedback tones using the client-side Web Audio API oscillator.</p>
+                    <h3>Web Audio Feedback</h3>
+                    <p>Synth oscillator generates real-time acoustic validation notes.</p>
                     <span class="hood-tag">Web Audio</span>
                 </div>
-                <div class="hood-connector"></div>
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">05</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">🎨</span></div>
+                
+                <div class="hood-card tilt-card c-yellow reveal-on-scroll" data-delay="500">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">05</div>
+                        <div class="hood-card-emoji">🎨</div>
                     </div>
-                    <h3>Reactive Theme</h3>
-                    <p>CSS styling color shifts dynamically based on the recognized hand gesture signature.</p>
+                    <h3>Reactive Interface</h3>
+                    <p>UI styles, glows, and animations respond dynamically to detected signals.</p>
                     <span class="hood-tag">Dynamic UI</span>
                 </div>
-                <div class="hood-connector"></div>
-                <div class="hood-step tilt-card">
-                    <div class="hood-step-header">
-                        <div class="hood-step-num">06</div>
-                        <div class="hood-emoji-wrap"><span class="hood-emoji">🛡️</span></div>
+                
+                <div class="hood-card tilt-card c-cyan reveal-on-scroll" data-delay="600">
+                    <div class="hood-card-header">
+                        <div class="hood-card-num">06</div>
+                        <div class="hood-card-emoji">🛡️</div>
                     </div>
-                    <h3>Privacy Architecture</h3>
-                    <p>Camera frames remain strictly in GPU memory. No server requests, trackers, or external APIs.</p>
+                    <h3>Isolated Privacy</h3>
+                    <p>Frames processed in local memory and instantly discarded. Zero server calls.</p>
                     <span class="hood-tag">Zero Tracking</span>
                 </div>
             </div>
@@ -513,28 +494,28 @@
 
         <!-- ===== 8. TECH ===== -->
         <section id="section-tech" class="section">
-            <div class="sec-header">
+            <div class="sec-header reveal-on-scroll">
                 <span class="tag">POWERED BY</span>
                 <h2>Technology <span class="grad-text">Stack</span></h2>
                 <p class="sec-desc">Built with world-class open source technologies</p>
             </div>
             <div class="tech-grid">
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-purple reveal-on-scroll" data-delay="100">
                     <div class="tech-icon">🧠</div><h4>MediaPipe</h4><p>Google's ML framework for hand tracking</p>
                 </div>
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-cyan reveal-on-scroll" data-delay="200">
                     <div class="tech-icon">⚡</div><h4>WebGL</h4><p>GPU-accelerated graphics rendering</p>
                 </div>
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-yellow reveal-on-scroll" data-delay="300">
                     <div class="tech-icon">🔬</div><h4>TensorFlow.js</h4><p>In-browser machine learning inference</p>
                 </div>
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-blue reveal-on-scroll" data-delay="400">
                     <div class="tech-icon">🌐</div><h4>WebAssembly</h4><p>Near-native execution performance</p>
                 </div>
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-green reveal-on-scroll" data-delay="500">
                     <div class="tech-icon">📷</div><h4>WebRTC</h4><p>Secure real-time camera access</p>
                 </div>
-                <div class="tech-card tilt-card">
+                <div class="tech-card tilt-card accent-red reveal-on-scroll" data-delay="600">
                     <div class="tech-icon">🔒</div><h4>Edge AI</h4><p>Zero cloud dependency, 100% private</p>
                 </div>
             </div>

@@ -114,28 +114,68 @@ window.showSection = function(sectionId) {
 // CANVA CHARTS GENERATORS (HTML5 CANVAS 2D API)
 // ==========================================================================
 
-// 1. Live Hand Landmark Skeleton Visualizer
-function drawLiveLandmarks(landmarks) {
+// Resize Landmarks Canvas (cached to prevent layout reflows on every frame)
+function resizeLandmarksCanvas() {
     const lmCanvas = document.getElementById("lmChart");
     if (!lmCanvas) return;
-    const ctx = lmCanvas.getContext("2d");
-    
-    // Proper high-DPI sizing and clearing
     const dpr = window.devicePixelRatio || 1;
     const rect = lmCanvas.getBoundingClientRect();
     lmCanvas.width = rect.width * dpr;
     lmCanvas.height = rect.height * dpr;
+    lmCanvas._width = rect.width;
+    lmCanvas._height = rect.height;
+}
+
+// Clear and draw grid overlay on Landmarks Canvas
+function clearLandmarksCanvas() {
+    const lmCanvas = document.getElementById("lmChart");
+    if (!lmCanvas) return;
+    const ctx = lmCanvas.getContext("2d");
+    
+    const dpr = window.devicePixelRatio || 1;
+    const w = lmCanvas._width || (lmCanvas.width / dpr);
+    const h = lmCanvas._height || (lmCanvas.height / dpr);
+    ctx.clearRect(0, 0, lmCanvas.width, lmCanvas.height);
     
     ctx.save();
     ctx.scale(dpr, dpr);
-    
-    const w = rect.width;
-    const h = rect.height;
-    ctx.clearRect(0, 0, w, h);
 
     // Draw dark tech background
     ctx.fillStyle = "rgba(39, 45, 78, 0.5)";
     ctx.fillRect(0, 0, w, h);
+
+    // Draw subtle blueprint grid lines
+    ctx.strokeStyle = "rgba(0, 242, 254, 0.05)";
+    ctx.lineWidth = 0.5;
+    const gridS = 20;
+    for (let x = 0; x < w; x += gridS) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+    for (let y = 0; y < h; y += gridS) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// 1. Live Hand Landmark Skeleton Visualizer
+function drawLiveLandmarks(landmarks) {
+    clearLandmarksCanvas();
+    
+    const lmCanvas = document.getElementById("lmChart");
+    if (!lmCanvas) return;
+    const ctx = lmCanvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const w = lmCanvas._width || (lmCanvas.width / dpr);
+    const h = lmCanvas._height || (lmCanvas.height / dpr);
+    
+    ctx.save();
+    ctx.scale(dpr, dpr);
 
     const padding = 15;
     const scaleX = w - padding * 2;
@@ -408,260 +448,9 @@ function drawProgressRings() {
 
 let orbAnimId = null;
 function initHeroOrb() {
-    const canvas = document.getElementById("heroCanvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    if (canvas._cleanup) {
-        canvas._cleanup();
-    }
-
-    const dpr = window.devicePixelRatio || 1;
-    let rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    let w = rect.width;
-    let h = rect.height;
-
-    // Resizing Handler
-    function handleResize() {
-        if (!canvas) return;
-        rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
-        w = rect.width;
-        h = rect.height;
-    }
-    window.addEventListener("resize", handleResize);
-
-    let time = 0;
-    
-    // Telemetry scroll log history
-    const logHistory = [
-        "SYS.INITIALIZE: OK",
-        "ML.MODEL: STANDBY",
-        "CONNECTING WEBCAM...",
-        "FPS: 60 // CACHE: OK",
-        "CALIBRATING WAVEFORMS...",
-        "FFT EQUALIZER: ACTIVE",
-        "RADAR SWEEP: ON",
-        "SIGNAL STATUS: 99.4%",
-        "NO HAND DETECTED",
-        "WAITING FOR SOURCE..."
-    ];
-
-    function animate() {
-        ctx.clearRect(0, 0, w, h);
-        time += 0.03;
-
-        const cx = w / 2;
-        const cy = h / 2;
-        const maxRadius = Math.min(w, h) * 0.42;
-
-        // 1. Technical Blueprint Grid Background
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.05)";
-        ctx.lineWidth = 0.5;
-        const gridSize = 25;
-        for (let x = 0; x < w; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-            ctx.stroke();
-        }
-        for (let y = 0; y < h; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-        }
-
-        // 2. Corner Reticle Accents (Blueprint look)
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.35)";
-        ctx.lineWidth = 1;
-        const pad = 12;
-        // TL
-        ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad + 12, pad); ctx.moveTo(pad, pad); ctx.lineTo(pad, pad + 12); ctx.stroke();
-        // TR
-        ctx.beginPath(); ctx.moveTo(w - pad, pad); ctx.lineTo(w - pad - 12, pad); ctx.moveTo(w - pad, pad); ctx.lineTo(w - pad, pad + 12); ctx.stroke();
-        // BL
-        ctx.beginPath(); ctx.moveTo(pad, h - pad); ctx.lineTo(pad + 12, h - pad); ctx.moveTo(pad, h - pad); ctx.lineTo(pad, h - pad - 12); ctx.stroke();
-        // BR
-        ctx.beginPath(); ctx.moveTo(w - pad, h - pad); ctx.lineTo(w - pad - 12, h - pad); ctx.moveTo(w - pad, h - pad); ctx.lineTo(w - pad, h - pad - 12); ctx.stroke();
-
-        // 3. Draw Outer Radar Rings & Azimuth Ticks
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.15)";
-        ctx.lineWidth = 1;
-        
-        // Ring 1 (Dashed Outer)
-        ctx.save();
-        ctx.setLineDash([4, 6]);
-        ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.restore();
-
-        // Ring 2 (Middle Solid)
-        ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius * 0.85, 0, 2 * Math.PI);
-        ctx.stroke();
-
-        // Ring 3 (Inner Solid)
-        ctx.strokeStyle = "rgba(155, 81, 224, 0.2)";
-        ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius * 0.6, 0, 2 * Math.PI);
-        ctx.stroke();
-
-        // Azimuth Degree Ticks
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.25)";
-        for (let i = 0; i < 360; i += 10) {
-            const radAngle = (i * Math.PI) / 180;
-            const length = i % 30 === 0 ? 8 : 4;
-            const startR = maxRadius * 0.85;
-            const endR = startR + length;
-            
-            ctx.beginPath();
-            ctx.moveTo(cx + startR * Math.cos(radAngle), cy + startR * Math.sin(radAngle));
-            ctx.lineTo(cx + endR * Math.cos(radAngle), cy + endR * Math.sin(radAngle));
-            ctx.stroke();
-        }
-
-        // 4. Central Target Reticle & Crosshairs
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.4)";
-        ctx.beginPath();
-        ctx.moveTo(cx - 15, cy);
-        ctx.lineTo(cx + 15, cy);
-        ctx.moveTo(cx, cy - 15);
-        ctx.lineTo(cx, cy + 15);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = "#00f2fe";
-        ctx.fill();
-
-        // 5. Radar Sweep Line & Trail (Circular Sweep)
-        const sweepAngle = time * 0.8;
-        const trailSegments = 20;
-        ctx.save();
-        for (let i = 0; i < trailSegments; i++) {
-            const currentAngle = sweepAngle - i * 0.02;
-            const alpha = 0.22 * (1 - i / trailSegments);
-            ctx.strokeStyle = `rgba(0, 242, 254, ${alpha})`;
-            ctx.lineWidth = 2 * (1 - i / trailSegments);
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + maxRadius * 0.85 * Math.cos(currentAngle), cy + maxRadius * 0.85 * Math.sin(currentAngle));
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // 6. Draw Waveform Oscilloscope inside the inner Ring
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius * 0.6, 0, 2 * Math.PI);
-        ctx.clip(); // Restrict wave drawings to inner circle only
-
-        // Draw horizontal center axis line
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.beginPath();
-        ctx.moveTo(cx - maxRadius * 0.6, cy);
-        ctx.lineTo(cx + maxRadius * 0.6, cy);
-        ctx.stroke();
-
-        // Oscilloscope Wave 1 (Sine Wave, Teal)
-        ctx.strokeStyle = "rgba(0, 242, 254, 0.6)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        const startX = cx - maxRadius * 0.6;
-        const endX = cx + maxRadius * 0.6;
-        for (let x = startX; x <= endX; x += 2) {
-            const relX = x - cx;
-            const waveY = cy + Math.sin(relX * 0.05 - time * 4.5) * 16 * Math.sin((relX + maxRadius * 0.6) / (maxRadius * 1.2) * Math.PI);
-            if (x === startX) {
-                ctx.moveTo(x, waveY);
-            } else {
-                ctx.lineTo(x, waveY);
-            }
-        }
-        ctx.stroke();
-
-        // Oscilloscope Wave 2 (Cosine Wave, Purple)
-        ctx.strokeStyle = "rgba(155, 81, 224, 0.4)";
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        for (let x = startX; x <= endX; x += 2) {
-            const relX = x - cx;
-            const waveY = cy + Math.cos(relX * 0.08 + time * 3) * 10 * Math.sin((relX + maxRadius * 0.6) / (maxRadius * 1.2) * Math.PI);
-            if (x === startX) {
-                ctx.moveTo(x, waveY);
-            } else {
-                ctx.lineTo(x, waveY);
-            }
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        // 7. Bouncing FFT Equalizer Bars (at the bottom half of the radar)
-        const barCount = 14;
-        const barWidth = 4;
-        const barGap = 3;
-        const totalBarsWidth = barCount * barWidth + (barCount - 1) * barGap;
-        const startBarX = cx - totalBarsWidth / 2;
-        const barYBase = cy + maxRadius * 0.35; // Positioned slightly down
-
-        ctx.save();
-        for (let i = 0; i < barCount; i++) {
-            const barHeight = Math.max(2, Math.abs(Math.sin(time * 2.2 + i * 0.4) * 22) + Math.cos(time * 0.8 + i * 0.7) * 8 + 6);
-            const x = startBarX + i * (barWidth + barGap);
-            const grad = ctx.createLinearGradient(x, barYBase, x, barYBase - barHeight);
-            grad.addColorStop(0, "rgba(155, 81, 224, 0.8)");
-            grad.addColorStop(1, "rgba(0, 242, 254, 0.9)");
-
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.roundRect(x, barYBase - barHeight, barWidth, barHeight, 1.5);
-            ctx.fill();
-        }
-        ctx.restore();
-
-        // 8. Futuristic Monospace Telemetry Readouts in Corners
-        ctx.fillStyle = "rgba(0, 242, 254, 0.85)";
-        ctx.font = "bold 9px 'Space Mono', monospace";
-        
-        // Top-Left corner telemetry
-        ctx.textAlign = "left";
-        ctx.fillText(`// CORE TELEMETRY ACTIVE`, 15, 20);
-        ctx.fillText(`SWEEP.AZIMUTH: ${Math.floor((sweepAngle * 180 / Math.PI) % 360)}°`, 15, 32);
-        ctx.fillText(`BAND: 2.45 GHz [WIFI.ML]`, 15, 44);
-
-        // Bottom-Left corner log scrolling
-        const currentLogIndex = Math.floor(time * 0.35) % logHistory.length;
-        ctx.fillText(`LOG: ${logHistory[currentLogIndex]}`, 15, h - 32);
-        ctx.fillText(`INFERENCE BACKEND: WASM_GPU`, 15, h - 20);
-
-        // Top-Right corner scale/latencies
-        ctx.textAlign = "right";
-        ctx.fillText(`SYSTEM STATUS: 60 FPS`, w - 15, 20);
-        const dynamicLat = (30 + Math.sin(time * 0.6) * 3).toFixed(1);
-        ctx.fillText(`SIGNAL LATENCY: ${dynamicLat} ms`, w - 15, 32);
-        ctx.fillText(`NOISE RATIO: -85.2 dB`, w - 15, 44);
-
-        // Bottom-Right corner calibrations
-        ctx.fillText(`ACCURACY RATINGS: 99.2%`, w - 15, h - 32);
-        ctx.fillText(`CALIBRATION SCALE: 1.0M`, w - 15, h - 20);
-
-        orbAnimId = requestAnimationFrame(animate);
-    }
-
-    animate();
-
-    canvas._cleanup = () => {
-        window.removeEventListener("resize", handleResize);
-        cancelAnimationFrame(orbAnimId);
-    };
+    // The hero canvas has been replaced by the premium floating hero-hand.png diagram.
+    // Return early to save CPU/GPU cycles.
+    return;
 }
 
 // ==========================================================================
@@ -692,7 +481,7 @@ function runStatsStripAnimation() {
 
 function init3DTiltEffect() {
     const cards = document.querySelectorAll(".tilt-card");
-    const maxTilt = 8; // limited tilt angle as requested
+    const maxTilt = 12; // limited tilt angle as requested (updated to 12 degrees)
 
     cards.forEach(card => {
         card.addEventListener("mousemove", e => {
@@ -706,10 +495,14 @@ function init3DTiltEffect() {
             const rotateX = ((y / h) - 0.5) * -maxTilt;
             const rotateY = ((x / w) - 0.5) * maxTilt;
 
+            // Remove transition during hover to prevent stuttering
+            card.style.transition = "none";
             card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.015, 1.015, 1.015)`;
         });
 
         card.addEventListener("mouseleave", () => {
+            // Restore smooth transition when resetting transform
+            card.style.transition = "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.3s ease, box-shadow 0.3s ease";
             card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
         });
     });
@@ -745,6 +538,74 @@ function initScrollSpy() {
     }, observerOptions);
 
     sections.forEach(sec => spyObserver.observe(sec));
+}
+
+// ==========================================================================
+// SCROLL-TRIGGERED TEXT & COMPONENT REVEAL OBSERVER
+// ==========================================================================
+
+function initScrollReveal() {
+    // Select all elements containing content we want to reveal dynamically on scroll across the entire website
+    const selectors = [
+        "section.section > .sec-header",
+        "section.section h1",
+        "section.section h2",
+        "section.section h3",
+        "section.section h4",
+        "section.section p",
+        ".stats-card",
+        ".hero-hand-container",
+        ".how-step",
+        ".how-card",
+        ".cam-box",
+        ".scanner-controls",
+        ".side-card",
+        ".gest-card",
+        ".usecase-card",
+        ".ring-card",
+        ".chart-box",
+        ".perf-card",
+        ".hood-card",
+        ".tech-card",
+        ".reveal-on-scroll"
+    ];
+    
+    const revealElements = document.querySelectorAll(selectors.join(", "));
+    const elementsToObserve = Array.from(revealElements);
+
+    // Add base scroll reveal class and dynamic transition delay for staggered grids/conveyors
+    elementsToObserve.forEach(el => {
+        el.classList.add("reveal-on-scroll");
+        
+        // If element already has a custom data-delay, preserve it
+        if (!el.getAttribute("data-delay")) {
+            const parent = el.parentElement;
+            if (parent) {
+                const siblingIndex = Array.from(parent.children).indexOf(el);
+                if (siblingIndex >= 0 && siblingIndex < 10) {
+                    el.style.transitionDelay = `${siblingIndex * 60}ms`; // Snappy stagger delay (60ms)
+                }
+            }
+        }
+    });
+    
+    const observerOptions = {
+        root: null,
+        rootMargin: "0px 0px -5% 0px",
+        threshold: 0.02
+    };
+    
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("revealed");
+                // Stop observing once visible to maintain revealed state on scroll-up
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    elementsToObserve.forEach(el => revealObserver.observe(el));
 }
 
 // ==========================================================================
@@ -867,21 +728,8 @@ function onResults(results) {
                 currentState = "incomplete";
             }
             
-            // Draw empty landmarks/skeleton canvas
-            const lmCanvas = document.getElementById("lmChart");
-            if (lmCanvas) {
-                const ctx = lmCanvas.getContext("2d");
-                const dpr = window.devicePixelRatio || 1;
-                const rect = lmCanvas.getBoundingClientRect();
-                lmCanvas.width = rect.width * dpr;
-                lmCanvas.height = rect.height * dpr;
-                ctx.save();
-                ctx.scale(dpr, dpr);
-                ctx.clearRect(0, 0, rect.width, rect.height);
-                ctx.fillStyle = "rgba(39, 45, 78, 0.5)";
-                ctx.fillRect(0, 0, rect.width, rect.height);
-                ctx.restore();
-            }
+            // Draw empty landmarks/skeleton canvas with grid
+            clearLandmarksCanvas();
             return;
         }
 
@@ -930,20 +778,7 @@ function onResults(results) {
             currentState = "no-target";
         }
         // Clear live landmarks chart when hand is gone
-        const lmCanvas = document.getElementById("lmChart");
-        if (lmCanvas) {
-            const ctx = lmCanvas.getContext("2d");
-            const dpr = window.devicePixelRatio || 1;
-            const rect = lmCanvas.getBoundingClientRect();
-            lmCanvas.width = rect.width * dpr;
-            lmCanvas.height = rect.height * dpr;
-            ctx.save();
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, rect.width, rect.height);
-            ctx.fillStyle = "rgba(39, 45, 78, 0.5)";
-            ctx.fillRect(0, 0, rect.width, rect.height);
-            ctx.restore();
-        }
+        clearLandmarksCanvas();
     }
 }
 
@@ -1091,38 +926,29 @@ document.addEventListener("DOMContentLoaded", () => {
     runStatsStripAnimation();
     init3DTiltEffect();
     initScrollSpy();
+    initScrollReveal();
     initMobileMenu();
 
-    // Generate static UI performance charts
+    // Generate static UI performance charts and initialize grids
+    resizeLandmarksCanvas(); // Cache landmarks dimensions on load
     drawAccuracyChart();
     drawLatencyChart();
     drawProgressRings();
+    clearLandmarksCanvas();
 
     // Debounced window resize handler to redraw performance elements and reset sizes
     let resizeTimeout = null;
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
+            resizeLandmarksCanvas(); // Update cached landmarks dimensions on window resize
             drawAccuracyChart();
             drawLatencyChart();
             drawProgressRings();
             
             // Clean/clear landmarks chart if not currently running scanner
             if (!isRunning) {
-                const lmCanvas = document.getElementById("lmChart");
-                if (lmCanvas) {
-                    const ctx = lmCanvas.getContext("2d");
-                    const dpr = window.devicePixelRatio || 1;
-                    const rect = lmCanvas.getBoundingClientRect();
-                    lmCanvas.width = rect.width * dpr;
-                    lmCanvas.height = rect.height * dpr;
-                    ctx.save();
-                    ctx.scale(dpr, dpr);
-                    ctx.clearRect(0, 0, rect.width, rect.height);
-                    ctx.fillStyle = "rgba(39, 45, 78, 0.5)";
-                    ctx.fillRect(0, 0, rect.width, rect.height);
-                    ctx.restore();
-                }
+                clearLandmarksCanvas();
             }
         }, 150);
     });
