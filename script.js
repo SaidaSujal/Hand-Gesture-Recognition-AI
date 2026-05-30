@@ -126,8 +126,124 @@ function resizeLandmarksCanvas() {
     lmCanvas._height = rect.height;
 }
 
+// Draws a beautiful 3D-looking holographic blueprint of a straight hand when idle
+function drawDefaultHandBlueprint(ctx, w, h) {
+    const blueprintPoints = [
+        { x: 0.5, y: 0.85 }, // 0: Wrist
+        { x: 0.38, y: 0.76 }, // 1: Thumb CMC
+        { x: 0.28, y: 0.68 }, // 2: Thumb MCP
+        { x: 0.22, y: 0.60 }, // 3: Thumb IP
+        { x: 0.16, y: 0.53 }, // 4: Thumb Tip
+        
+        { x: 0.37, y: 0.53 }, // 5: Index MCP
+        { x: 0.35, y: 0.38 }, // 6: Index PIP
+        { x: 0.34, y: 0.28 }, // 7: Index DIP
+        { x: 0.33, y: 0.18 }, // 8: Index Tip
+        
+        { x: 0.47, y: 0.51 }, // 9: Middle MCP
+        { x: 0.47, y: 0.34 }, // 10: Middle PIP
+        { x: 0.47, y: 0.22 }, // 11: Middle DIP
+        { x: 0.47, y: 0.11 }, // 12: Middle Tip
+        
+        { x: 0.57, y: 0.53 }, // 13: Ring MCP
+        { x: 0.59, y: 0.38 }, // 14: Ring PIP
+        { x: 0.60, y: 0.28 }, // 15: Ring DIP
+        { x: 0.61, y: 0.18 }, // 16: Ring Tip
+        
+        { x: 0.66, y: 0.57 }, // 17: Pinky MCP
+        { x: 0.70, y: 0.46 }, // 18: Pinky PIP
+        { x: 0.72, y: 0.38 }, // 19: Pinky DIP
+        { x: 0.74, y: 0.30 }  // 20: Pinky Tip
+    ];
+
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    blueprintPoints.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+    });
+    const handW = maxX - minX;
+    const handH = maxY - minY;
+    const maxSpan = Math.max(handW, handH) || 0.001;
+    const handOffsetX = (1 - handW / maxSpan) / 2;
+    const handOffsetY = (1 - handH / maxSpan) / 2;
+
+    const padding = 15;
+    const size = Math.min(w, h) - padding * 2;
+    const offsetX = (w - size) / 2;
+    const offsetY = (h - size) / 2;
+    
+    const points = blueprintPoints.map(p => {
+        const nx = (p.x - minX) / maxSpan;
+        const ny = (p.y - minY) / maxSpan;
+        const px = handOffsetX + nx;
+        const py = handOffsetY + ny;
+        return {
+            x: offsetX + px * size,
+            y: offsetY + py * size
+        };
+    });
+
+    // Connections
+    const connections = [
+        [0, 1], [1, 2], [2, 3], [3, 4],
+        [0, 5], [5, 6], [6, 7], [7, 8],
+        [9, 10], [10, 11], [11, 12],
+        [13, 14], [14, 15], [15, 16],
+        [0, 17], [17, 18], [18, 19], [19, 20],
+        [5, 9], [9, 13], [13, 17]
+    ];
+
+    // 1. Draw volumetric 3D hand shadow fill
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y); // wrist
+    ctx.lineTo(points[4].x, points[4].y); // thumb tip
+    ctx.lineTo(points[8].x, points[8].y); // index tip
+    ctx.lineTo(points[12].x, points[12].y); // middle tip
+    ctx.lineTo(points[16].x, points[16].y); // ring tip
+    ctx.lineTo(points[20].x, points[20].y); // pinky tip
+    ctx.closePath();
+    ctx.fillStyle = "rgba(234, 179, 8, 0.09)"; // rich translucent gold
+    ctx.fill();
+
+    // 2. Draw outer boundary silhouette
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.18)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 3. Draw bones (connections)
+    ctx.strokeStyle = "rgba(217, 119, 6, 0.85)";
+    ctx.lineWidth = 3.5;
+    connections.forEach(([i, j]) => {
+        ctx.beginPath();
+        ctx.moveTo(points[i].x, points[i].y);
+        ctx.lineTo(points[j].x, points[j].y);
+        ctx.stroke();
+    });
+
+    // 4. Draw joint nodes
+    points.forEach((p, idx) => {
+        const isTip = [4, 8, 12, 16, 20].includes(idx);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isTip ? 6 : 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = isTip ? "#eab308" : "#ffffff";
+        ctx.shadowColor = "#eab308";
+        ctx.shadowBlur = isTip ? 8 : 0;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    });
+
+    // Add HUD label
+    ctx.fillStyle = "rgba(245, 158, 11, 0.4)";
+    ctx.font = "8px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("HOLOGRAPHIC BLUEPRINT: IDLE", w / 2, h - 8);
+}
+
 // Clear and draw grid overlay on Landmarks Canvas
-function clearLandmarksCanvas() {
+function clearLandmarksCanvas(drawBlueprint = true) {
     const lmCanvas = document.getElementById("lmChart");
     if (!lmCanvas) return;
     const ctx = lmCanvas.getContext("2d");
@@ -141,11 +257,11 @@ function clearLandmarksCanvas() {
     ctx.scale(dpr, dpr);
 
     // Draw dark tech background
-    ctx.fillStyle = "rgba(39, 45, 78, 0.5)";
+    ctx.fillStyle = "rgba(249, 250, 251, 0.8)";
     ctx.fillRect(0, 0, w, h);
 
     // Draw subtle blueprint grid lines
-    ctx.strokeStyle = "rgba(0, 242, 254, 0.05)";
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.05)";
     ctx.lineWidth = 0.5;
     const gridS = 20;
     for (let x = 0; x < w; x += gridS) {
@@ -160,12 +276,19 @@ function clearLandmarksCanvas() {
         ctx.lineTo(w, y);
         ctx.stroke();
     }
+    
+    // Draw default blueprint hand when not actively processing live landmarks
+    if (drawBlueprint) {
+        drawDefaultHandBlueprint(ctx, w, h);
+    }
+    
     ctx.restore();
 }
 
 // 1. Live Hand Landmark Skeleton Visualizer
 function drawLiveLandmarks(landmarks) {
-    clearLandmarksCanvas();
+    // Clear canvas and draw grid only (no blueprint)
+    clearLandmarksCanvas(false);
     
     const lmCanvas = document.getElementById("lmChart");
     if (!lmCanvas) return;
@@ -177,15 +300,35 @@ function drawLiveLandmarks(landmarks) {
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    const padding = 15;
-    const scaleX = w - padding * 2;
-    const scaleY = h - padding * 2;
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    landmarks.forEach(l => {
+        if (l.x < minX) minX = l.x;
+        if (l.x > maxX) maxX = l.x;
+        if (l.y < minY) minY = l.y;
+        if (l.y > maxY) maxY = l.y;
+    });
+    const handW = maxX - minX;
+    const handH = maxY - minY;
+    const maxSpan = Math.max(handW, handH) || 0.001;
+    const handOffsetX = (1 - handW / maxSpan) / 2;
+    const handOffsetY = (1 - handH / maxSpan) / 2;
 
-    // Map landmark coordinates (between 0 and 1, mirrored back)
-    const points = landmarks.map(l => ({
-        x: padding + (1 - l.x) * scaleX,
-        y: padding + l.y * scaleY
-    }));
+    const padding = 15;
+    const size = Math.min(w, h) - padding * 2;
+    const offsetX = (w - size) / 2;
+    const offsetY = (h - size) / 2;
+    
+    const points = landmarks.map(l => {
+        const nx = (l.x - minX) / maxSpan;
+        const ny = (l.y - minY) / maxSpan;
+        const px = handOffsetX + nx;
+        const py = handOffsetY + ny;
+        return {
+            x: offsetX + (1 - px) * size, // mirrored
+            y: offsetY + py * size
+        };
+    });
 
     // Define MediaPipe hand connection pairs
     const connections = [
@@ -203,9 +346,24 @@ function drawLiveLandmarks(landmarks) {
         [5, 9], [9, 13], [13, 17]
     ];
 
-    // Draw connection lines
-    ctx.strokeStyle = "rgba(155, 81, 224, 0.65)";
-    ctx.lineWidth = 1.5;
+    // 1. Draw volumetric 3D hand hull fill/silhouette
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y); // wrist
+    ctx.lineTo(points[4].x, points[4].y); // thumb tip
+    ctx.lineTo(points[8].x, points[8].y); // index tip
+    ctx.lineTo(points[12].x, points[12].y); // middle tip
+    ctx.lineTo(points[16].x, points[16].y); // ring tip
+    ctx.lineTo(points[20].x, points[20].y); // pinky tip
+    ctx.closePath();
+    ctx.fillStyle = "rgba(234, 179, 8, 0.09)"; // rich translucent gold
+    ctx.fill();
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.18)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 2. Draw connection lines (bones)
+    ctx.strokeStyle = "rgba(217, 119, 6, 0.85)";
+    ctx.lineWidth = 3.5;
     connections.forEach(([i, j]) => {
         ctx.beginPath();
         ctx.moveTo(points[i].x, points[i].y);
@@ -213,17 +371,24 @@ function drawLiveLandmarks(landmarks) {
         ctx.stroke();
     });
 
-    // Draw joint nodes
+    // 3. Draw joint nodes
     points.forEach((p, idx) => {
         const isTip = [4, 8, 12, 16, 20].includes(idx);
         ctx.beginPath();
-        ctx.arc(p.x, p.y, isTip ? 4 : 2.5, 0, 2 * Math.PI);
-        ctx.fillStyle = isTip ? "#00f2fe" : "#ffffff";
-        ctx.shadowColor = "#00f2fe";
-        ctx.shadowBlur = isTip ? 6 : 0;
+        ctx.arc(p.x, p.y, isTip ? 6 : 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = isTip ? "#eab308" : "#ffffff";
+        ctx.shadowColor = "#eab308";
+        ctx.shadowBlur = isTip ? 8 : 0;
         ctx.fill();
         ctx.shadowBlur = 0;
     });
+
+    // HUD Stats Overlay on canvas
+    ctx.fillStyle = "rgba(217, 119, 6, 0.8)";
+    ctx.font = "8px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText("LIVELINK: ACTIVE", 10, 15);
+    ctx.fillText(`X: ${(1-landmarks[8].x).toFixed(2)} Y: ${landmarks[8].y.toFixed(2)}`, 10, 25);
 
     ctx.restore();
 }
@@ -245,7 +410,7 @@ function drawAccuracyChart() {
     const w = rect.width;
     const h = rect.height;
     ctx.clearRect(0, 0, w, h);
-
+ 
     const data = [
         { name: "Palm", pct: 98 },
         { name: "Victory", pct: 96 },
@@ -254,49 +419,49 @@ function drawAccuracyChart() {
         { name: "Pointing", pct: 99 },
         { name: "Rock On", pct: 94 }
     ];
-
+ 
     const labelOffset = 90;
     const startY = 20;
     const chartWidth = w - labelOffset - 50;
     const barHeight = 18;
     const gap = 20;
-
+ 
     data.forEach((item, idx) => {
         const y = startY + idx * (barHeight + gap);
-
+ 
         // Render gesture label
-        ctx.fillStyle = "#9ea0a5";
+        ctx.fillStyle = "#475569";
         ctx.font = "500 13px 'Inter', sans-serif";
         ctx.textAlign = "right";
         ctx.fillText(item.name, labelOffset - 15, y + 13);
-
+ 
         // Render glass track bar
-        ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.fillStyle = "rgba(245, 158, 11, 0.06)";
         ctx.beginPath();
         ctx.roundRect(labelOffset, y, chartWidth, barHeight, 4);
         ctx.fill();
-
+ 
         // Render glowing gradient bar
         const fillWidth = (item.pct / 100) * chartWidth;
         const grad = ctx.createLinearGradient(labelOffset, 0, labelOffset + fillWidth, 0);
-        grad.addColorStop(0, "#9b51e0"); // purple
-        grad.addColorStop(1, "#00f2fe"); // cyan
-
+        grad.addColorStop(0, "#f59e0b"); // amber yellow
+        grad.addColorStop(1, "#d97706"); // dark amber
+ 
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.roundRect(labelOffset, y, fillWidth, barHeight, 4);
         ctx.fill();
-
+ 
         // Render percentage value
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#0f172a";
         ctx.font = "700 12px 'Space Mono', monospace";
         ctx.textAlign = "left";
         ctx.fillText(item.pct + "%", labelOffset + fillWidth + 10, y + 13);
     });
-
+ 
     ctx.restore();
 }
-
+ 
 // 3. Latency Distribution Bell Curve Chart
 function drawLatencyChart() {
     const canvas = document.getElementById("latencyChart");
@@ -314,14 +479,14 @@ function drawLatencyChart() {
     const w = rect.width;
     const h = rect.height;
     ctx.clearRect(0, 0, w, h);
-
+ 
     const paddingLeft = 40;
     const paddingBottom = 40;
     const chartW = w - paddingLeft - 20;
     const chartH = h - paddingBottom - 20;
-
+ 
     // Draw horizontal grids
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.08)";
     ctx.lineWidth = 1;
     for (let i = 1; i <= 4; i++) {
         const y = chartH + 20 - (chartH / 4) * i;
@@ -330,7 +495,7 @@ function drawLatencyChart() {
         ctx.lineTo(w - 20, y);
         ctx.stroke();
     }
-
+ 
     // Generate bell curve points
     const curvePoints = [];
     for (let x = 0; x <= chartW; x++) {
@@ -341,31 +506,31 @@ function drawLatencyChart() {
         const yPos = chartH + 20 - yVal;
         curvePoints.push({ x: xPos, y: yPos });
     }
-
+ 
     // Draw bell curve gradient fill
     ctx.beginPath();
     ctx.moveTo(curvePoints[0].x, chartH + 20);
     curvePoints.forEach(p => ctx.lineTo(p.x, p.y));
     ctx.lineTo(curvePoints[curvePoints.length - 1].x, chartH + 20);
     ctx.closePath();
-
+ 
     const fillGrad = ctx.createLinearGradient(0, 20, 0, chartH + 20);
-    fillGrad.addColorStop(0, "rgba(0, 242, 254, 0.22)");
-    fillGrad.addColorStop(1, "rgba(0, 242, 254, 0)");
+    fillGrad.addColorStop(0, "rgba(245, 158, 11, 0.15)");
+    fillGrad.addColorStop(1, "rgba(245, 158, 11, 0)");
     ctx.fillStyle = fillGrad;
     ctx.fill();
-
+ 
     // Draw curve line
-    ctx.strokeStyle = "#00f2fe";
+    ctx.strokeStyle = "#d97706";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
     curvePoints.forEach(p => ctx.lineTo(p.x, p.y));
     ctx.stroke();
-
+ 
     // Draw average latency marker line
     const avgX = paddingLeft + chartW * 0.31;
-    ctx.strokeStyle = "rgba(155, 81, 224, 0.6)";
+    ctx.strokeStyle = "rgba(217, 119, 6, 0.6)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
@@ -373,15 +538,15 @@ function drawLatencyChart() {
     ctx.lineTo(avgX, chartH + 20);
     ctx.stroke();
     ctx.setLineDash([]); // reset
-
+ 
     // Draw average text
-    ctx.fillStyle = "#9b51e0";
+    ctx.fillStyle = "#d97706";
     ctx.font = "bold 11px 'Space Mono', monospace";
     ctx.textAlign = "center";
     ctx.fillText("Avg: 35ms", avgX, 15);
-
+ 
     // Axis markings
-    ctx.fillStyle = "#9ea0a5";
+    ctx.fillStyle = "#475569";
     ctx.font = "10px 'Inter', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("10ms", paddingLeft + chartW * 0.1, chartH + 35);
@@ -389,10 +554,10 @@ function drawLatencyChart() {
     ctx.fillText("50ms", paddingLeft + chartW * 0.5, chartH + 35);
     ctx.fillText("70ms", paddingLeft + chartW * 0.7, chartH + 35);
     ctx.fillText("90ms", paddingLeft + chartW * 0.9, chartH + 35);
-
+ 
     ctx.restore();
 }
-
+ 
 // 4. Performance Metric Canvas Rings
 function drawProgressRings() {
     const ringCards = document.querySelectorAll(".ring-card");
@@ -413,31 +578,26 @@ function drawProgressRings() {
         const w = rect.width;
         const h = rect.height;
         ctx.clearRect(0, 0, w, h);
-
+ 
         const cx = w / 2;
         const cy = h / 2;
         const radius = Math.min(w, h) * 0.38;
         const lineWidth = 6;
-
+ 
         // Base circle
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.06)";
         ctx.lineWidth = lineWidth;
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.stroke();
-
+ 
         // Progress arc
         const endAngle = (pct / 100) * 2 * Math.PI - Math.PI / 2;
         const grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, "#00f2fe");
-        grad.addColorStop(1, "#9b51e0");
-
+        grad.addColorStop(0, "#f59e0b");
+        grad.addColorStop(1, "#d97706");
+ 
         ctx.strokeStyle = grad;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, -Math.PI / 2, endAngle);
-        ctx.stroke();
-
         ctx.restore();
     });
 }
@@ -446,12 +606,155 @@ function drawProgressRings() {
 // HERO AI GRADIENT NETWORK ORB ANIMATION (REWRITTEN FOR HOLO BLUEPRINT)
 // ==========================================================================
 
-let orbAnimId = null;
-function initHeroOrb() {
-    // The hero canvas has been replaced by the premium floating hero-hand.png diagram.
-    // Return early to save CPU/GPU cycles.
-    return;
+// ==========================================================================
+// HIGH-PERFORMANCE NEURAL NETWORK CANVAS BACKGROUND
+// ==========================================================================
+
+let particleCanvas = null;
+let particleCtx = null;
+let bgParticles = [];
+const bgParticleCount = 65;
+const bgConnectionDistance = 130;
+let bgMouse = { x: null, y: null, active: false };
+
+const bgColors = {
+    primary: '#D4AF37',       // Metallic gold
+    secondary: '#D97706',     // Warm amber accent
+    nodes: '#1C1917',         // Charcoal nodes
+    lines: 'rgba(217, 119, 6, 0.08)' // Faint gold lines
+};
+
+function resizeParticleCanvas() {
+    if (!particleCanvas) return;
+    particleCanvas.width = window.innerWidth;
+    particleCanvas.height = window.innerHeight;
 }
+
+class BgParticle {
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        this.x = Math.random() * (particleCanvas ? particleCanvas.width : window.innerWidth);
+        this.y = Math.random() * (particleCanvas ? particleCanvas.height : window.innerHeight);
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 1.5 + 1.2;
+        this.pulse = Math.random() > 0.85;
+        this.pulseFactor = 0;
+        this.pulseSpeed = 0.03 + Math.random() * 0.07;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (particleCanvas) {
+            if (this.x < 0 || this.x > particleCanvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > particleCanvas.height) this.vy *= -1;
+        }
+
+        if (this.pulse) {
+            this.pulseFactor += this.pulseSpeed;
+        }
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        let currentRadius = this.radius;
+        if (this.pulse) {
+            currentRadius += Math.sin(this.pulseFactor) * 1.2;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = bgColors.primary;
+        }
+        ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = this.pulse ? bgColors.secondary : bgColors.nodes;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+function initParticleCanvas() {
+    particleCanvas = document.getElementById('particle-canvas');
+    if (!particleCanvas) return;
+    particleCtx = particleCanvas.getContext('2d');
+    
+    resizeParticleCanvas();
+    bgParticles = [];
+    for (let i = 0; i < bgParticleCount; i++) {
+        bgParticles.push(new BgParticle());
+    }
+
+    window.addEventListener('resize', resizeParticleCanvas);
+    
+    window.addEventListener('mousemove', (e) => {
+        bgMouse.x = e.clientX;
+        bgMouse.y = e.clientY;
+        bgMouse.active = true;
+    });
+
+    window.addEventListener('mouseleave', () => {
+        bgMouse.x = null;
+        bgMouse.y = null;
+        bgMouse.active = false;
+    });
+
+    animateParticleCanvas();
+}
+
+function animateParticleCanvas() {
+    if (!particleCanvas || !particleCtx) return;
+    particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+    
+    for (let i = 0; i < bgParticles.length; i++) {
+        const p1 = bgParticles[i];
+        p1.update();
+        p1.draw(particleCtx);
+
+        // Connection lines between nodes
+        for (let j = i + 1; j < bgParticles.length; j++) {
+            const p2 = bgParticles[j];
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < bgConnectionDistance) {
+                particleCtx.beginPath();
+                particleCtx.strokeStyle = bgColors.lines;
+                particleCtx.globalAlpha = 1 - (dist / bgConnectionDistance);
+                particleCtx.lineWidth = 0.5;
+                particleCtx.moveTo(p1.x, p1.y);
+                particleCtx.lineTo(p2.x, p2.y);
+                particleCtx.stroke();
+                particleCtx.globalAlpha = 1;
+            }
+        }
+
+        // Connection/Parallax behavior with cursor
+        if (bgMouse.active && bgMouse.x !== null && bgMouse.y !== null) {
+            const dxMouse = p1.x - bgMouse.x;
+            const dyMouse = p1.y - bgMouse.y;
+            const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+            if (distMouse < 180) {
+                particleCtx.beginPath();
+                particleCtx.strokeStyle = 'rgba(217, 119, 6, 0.2)'; // amber connection line to cursor
+                particleCtx.globalAlpha = 1 - (distMouse / 180);
+                particleCtx.lineWidth = 0.7;
+                particleCtx.moveTo(p1.x, p1.y);
+                particleCtx.lineTo(bgMouse.x, bgMouse.y);
+                particleCtx.stroke();
+                particleCtx.globalAlpha = 1;
+                
+                // Gentle physics pull toward cursor
+                p1.x -= dxMouse * 0.015;
+                p1.y -= dyMouse * 0.015;
+            }
+        }
+    }
+    requestAnimationFrame(animateParticleCanvas);
+}
+
 
 // ==========================================================================
 // INTERACTIVE STATS STRIP COUNT-UP ANIMATION
@@ -567,7 +870,15 @@ function initScrollReveal() {
         ".perf-card",
         ".hood-card",
         ".tech-card",
-        ".reveal-on-scroll"
+        ".reveal-on-scroll",
+        ".reveal-home",
+        ".reveal-how",
+        ".reveal-scanner",
+        ".reveal-gestures",
+        ".reveal-usecases",
+        ".reveal-metrics",
+        ".reveal-hood",
+        ".reveal-tech"
     ];
     
     const revealElements = document.querySelectorAll(selectors.join(", "));
@@ -591,8 +902,8 @@ function initScrollReveal() {
     
     const observerOptions = {
         root: null,
-        rootMargin: "0px 0px -5% 0px",
-        threshold: 0.02
+        rootMargin: "0px 0px -2% 0px",
+        threshold: 0
     };
     
     const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -605,7 +916,16 @@ function initScrollReveal() {
         });
     }, observerOptions);
     
-    elementsToObserve.forEach(el => revealObserver.observe(el));
+    elementsToObserve.forEach(el => {
+        revealObserver.observe(el);
+        
+        // Immediate check: Reveal elements already in the viewport or scrolled past
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight) {
+            el.classList.add("revealed");
+            revealObserver.unobserve(el);
+        }
+    });
 }
 
 // ==========================================================================
@@ -820,41 +1140,47 @@ function recognizeGesture(landmarks) {
 
 // Write detected gesture state changes to the sidebar log
 function writeToGestureLog(gesture) {
-    const log = document.getElementById("gestureLog");
-    if (!log) return;
-    
-    // Check if dynamic history table body exists
     const historyTableBody = document.getElementById("historyTableBody");
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (!historyTableBody) return;
 
-    if (historyTableBody) {
-        const item = document.createElement("tr");
-        item.className = "g-log-item-tr";
-        
-        const timeTd = document.createElement("td");
-        timeTd.innerText = timestamp;
-        
-        const gestureTd = document.createElement("td");
-        gestureTd.innerText = `Detected: ${gesture.toUpperCase()}`;
-        
-        item.appendChild(timeTd);
-        item.appendChild(gestureTd);
-        
-        historyTableBody.insertBefore(item, historyTableBody.firstChild);
+    // Remove empty placeholder row if present
+    const emptyRow = historyTableBody.querySelector(".empty-history-row");
+    if (emptyRow) {
+        emptyRow.remove();
+    }
 
-        // Keep last 10 entries in logs to avoid table growth lag
-        while (historyTableBody.childNodes.length > 10) {
-            historyTableBody.removeChild(historyTableBody.lastChild);
+    // For all rows inside #historyTableBody, find the .status-badge and set it to inactive
+    const rows = historyTableBody.querySelectorAll("tr");
+    rows.forEach(row => {
+        const badge = row.querySelector(".status-badge");
+        if (badge) {
+            badge.innerText = "Inactive";
+            badge.className = "status-badge inactive";
         }
-    } else {
-        const item = document.createElement("div");
-        item.className = "g-log-item";
-        item.innerText = `[${timestamp}] Detected: ${gesture.toUpperCase()}`;
-        
-        log.prepend(item);
+    });
 
-        while (log.childNodes.length > 12) {
-            log.removeChild(log.lastChild);
+    // Locate the row in #historyTableBody that has the data-gesture attribute matching the detected gesture name
+    const detectedRow = historyTableBody.querySelector(`tr[data-gesture="${gesture}"]`);
+    if (detectedRow) {
+        // Increment the count inside the .gest-count cell.
+        const countCell = detectedRow.querySelector(".gest-count");
+        if (countCell) {
+            const currentCount = parseInt(countCell.innerText) || 0;
+            countCell.innerText = currentCount + 1;
+        }
+
+        // Get the current local time formatted as HH:MM:SS (using new Date().toLocaleTimeString(...)) and write it into the .gest-time cell.
+        const timeCell = detectedRow.querySelector(".gest-time");
+        if (timeCell) {
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            timeCell.innerText = timestamp;
+        }
+
+        // Set the status badge in that row to active: text "Active" and class "status-badge active".
+        const badge = detectedRow.querySelector(".status-badge");
+        if (badge) {
+            badge.innerText = "Active";
+            badge.className = "status-badge active";
         }
     }
 }
@@ -891,6 +1217,25 @@ function updateScannerUI(state) {
     if (state !== "no-target" && state !== "incomplete" && state !== "nothing") {
         body.classList.add("state-active-gesture");
     }
+
+    // Update status badges in the history table
+    const historyTableBody = document.getElementById("historyTableBody");
+    if (historyTableBody) {
+        const rows = historyTableBody.querySelectorAll("tr[data-gesture]");
+        rows.forEach(row => {
+            const badge = row.querySelector(".status-badge");
+            if (badge) {
+                const gestureKey = row.getAttribute("data-gesture");
+                if (gestureKey === state) {
+                    badge.innerText = "Active";
+                    badge.className = "status-badge active";
+                } else {
+                    badge.innerText = "Inactive";
+                    badge.className = "status-badge inactive";
+                }
+            }
+        });
+    }
 }
 
 // ==========================================================================
@@ -922,7 +1267,7 @@ function initMobileMenu() {
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    initHeroOrb();
+    initParticleCanvas();
     runStatsStripAnimation();
     init3DTiltEffect();
     initScrollSpy();
